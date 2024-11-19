@@ -297,6 +297,8 @@ public final class TestActionBuilder {
 
           lcovMergerFilesToRun.addTransitive(lcovFilesToRun.getFilesToRun());
           if (lcovFilesToRun.getRunfilesSupport() != null) {
+            inputsBuilder.addTransitive(
+              NestedSetBuilder.create(Order.STABLE_ORDER, lcovFilesToRun.getRunfilesSupport().getRunfilesMiddleman()));
             lcovMergerFilesToRun.add(lcovFilesToRun.getRunfilesSupport().getRunfilesMiddleman());
           }
           lcovMergerRunfilesSupplier = lcovFilesToRun.getRunfilesSupplier();
