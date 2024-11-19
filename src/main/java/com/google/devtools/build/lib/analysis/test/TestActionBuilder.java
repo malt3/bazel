@@ -308,6 +308,8 @@ public final class TestActionBuilder {
           inputsBuilder.addTransitive(lcovFilesToRun.getFilesToRun());
           lcovMergerFilesToRun.addTransitive(lcovFilesToRun.getFilesToRun());
           if (lcovFilesToRun.getRunfilesSupport() != null) {
+            inputsBuilder.addTransitive(
+              NestedSetBuilder.create(Order.STABLE_ORDER, lcovFilesToRun.getRunfilesSupport().getRunfilesTreeArtifact()));
             lcovMergerRunfilesTree = lcovFilesToRun.getRunfilesSupport().getRunfilesTreeArtifact();
           }
         } else {
