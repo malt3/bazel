@@ -40,6 +40,7 @@ import com.google.devtools.build.lib.actions.Artifact;
 import com.google.devtools.build.lib.actions.ArtifactPathResolver;
 import com.google.devtools.build.lib.actions.CommandAction;
 import com.google.devtools.build.lib.actions.CommandLineExpansionException;
+import com.google.devtools.build.lib.actions.CompositeRunfilesSupplier;
 import com.google.devtools.build.lib.actions.EnvironmentalExecException;
 import com.google.devtools.build.lib.actions.ExecException;
 import com.google.devtools.build.lib.actions.NotifyOnActionCacheHit;
@@ -79,6 +80,7 @@ import java.io.OutputStream;
 import java.time.Duration;
 import java.util.AbstractCollection;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -166,7 +168,6 @@ public class TestRunnerAction extends AbstractAction
 
   private final boolean splitCoveragePostProcessing;
   private final NestedSetBuilder<Artifact> lcovMergerFilesToRun;
-  private final RunfilesSupplier lcovMergerRunfilesSupplier;
 
   // TODO(b/192694287): Remove once we migrate all tests from the allowlist.
   private final PackageSpecificationProvider networkAllowlist;
@@ -221,7 +222,11 @@ public class TestRunnerAction extends AbstractAction
         nonNullAsSet(
             testLog, cacheStatus, coverageArtifact, coverageDirectory, undeclaredOutputsDir));
     Preconditions.checkState((collectCoverageScript == null) == (coverageArtifact == null));
-    this.runfilesSupplier = runfilesSupplier;
+    if (lcovMergerRunfilesSupplier == null) {
+      this.runfilesSupplier = runfilesSupplier;
+    } else {
+      this.runfilesSupplier = CompositeRunfilesSupplier.fromSuppliers(Arrays.asList(runfilesSupplier, lcovMergerRunfilesSupplier));
+    }
     this.testSetupScript = testSetupScript;
     this.testXmlGeneratorScript = testXmlGeneratorScript;
     this.collectCoverageScript = collectCoverageScript;
@@ -271,7 +276,6 @@ public class TestRunnerAction extends AbstractAction
     this.cancelConcurrentTestsOnSuccess = cancelConcurrentTestsOnSuccess;
     this.splitCoveragePostProcessing = splitCoveragePostProcessing;
     this.lcovMergerFilesToRun = lcovMergerFilesToRun;
-    this.lcovMergerRunfilesSupplier = lcovMergerRunfilesSupplier;
     this.networkAllowlist = networkAllowlist;
 
     // Mark all possible test outputs for deletion before test execution.
@@ -331,10 +335,6 @@ public class TestRunnerAction extends AbstractAction
   @Override
   public final ActionEnvironment getEnvironment() {
     return configuration.getActionEnvironment();
-  }
-
-  public RunfilesSupplier getLcovMergerRunfilesSupplier() {
-    return lcovMergerRunfilesSupplier;
   }
 
   public BuildConfigurationValue getConfiguration() {
